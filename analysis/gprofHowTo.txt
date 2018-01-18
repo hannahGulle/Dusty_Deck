@@ -1,0 +1,8 @@
+gfortran -pg dusty.f
+./a.out
+gprof a.out gmon.out >gprof_results
+
+
+gfortran -fprofile-arcs -ftest-coverage dusty.f
+./a.out
+gcov dusty.f

@@ -1,0 +1,273 @@
+        -:    0:Source:dusty.f
+        -:    0:Graph:dusty.gcno
+        -:    0:Data:dusty.gcda
+        -:    0:Runs:1
+        -:    0:Programs:1
+        1:    1:      program dusty 
+        -:    2:
+        -:    3:      parameter (MAXDIM = 50)
+        -:    4:
+        -:    5:      integer IA(MAXDIM), N
+        -:    6:      double precision AV(MAXDIM), BV(MAXDIM), CV(MAXDIM)
+        -:    7:      double precision OP(MAXDIM,MAXDIM), ID(MAXDIM,MAXDIM)
+        -:    8:      double precision AM(MAXDIM,MAXDIM), BM(MAXDIM,MAXDIM)
+        -:    9:      double precision CM(MAXDIM,MAXDIM), DM(MAXDIM,MAXDIM)
+        -:   10:      double precision check, BOT, TOP, HOLDA, HOLDB, TRACE3
+        -:   11:      real start, finish
+        -:   12:    
+        -:   13:      double precision trig
+        -:   14:      external trig
+        -:   15:
+        1:   16:      N = MAXDIM
+        -:   17:     
+        1:   18:      call cpu_time(start) 
+        -:   19:
+        -:   20:* Should be computing the same "random" number sequence every time with
+        -:   21:* seeded start at 1
+        1:   22:      call srand(1)
+        -:   23:
+        -:   24:*     Fill arrays
+        -:   25:
+        -:   26:* Loop 10 Series -- Filling Arrays
+        -:   27:
+       51:   28:      do 10 i = 1, N
+        -:   29:        AV(i) = bessel_jn(0,dble((rand() *
+       50:   30:     +               (-1)**(mod(int(10*rand()),N)))))
+        -:   31:10    continue
+        -:   32:
+       51:   33:      do 11 i = 1, N
+        -:   34:        BV(i) = bessel_jn(1,dble((rand() * 
+       50:   35:     +               (-1)**(mod(int(10*rand()),N)))))
+        -:   36:11    continue
+        -:   37:
+        1:   38:      check = 0.0
+       51:   39:      do 12 i = 1, N
+       50:   40:        ival = N
+       50:   41:        check = check + AV(i) * BV(i)
+       50:   42:        call idcheck(ival,check,AV,BV,ID)
+        -:   43:12    continue  
+        -:   44:
+        -:   45:* Compute |AV><BV|
+        -:   46:* Building a matrix??
+        -:   47:
+       51:   48:      do 13 i = 1, N
+     2550:   49:        do 14 j = 1, N
+     2500:   50:          call idcheck(N,check,AV,BV,ID)
+     2500:   51:          if ( check .gt. 0.5 ) then
+    #####:   52:             OP(i,j) = AV(i) * BV(j) / BV(i)
+        -:   53:          else
+     2500:   54:             OP(i,j) = AV(j) * BV(i) / BV(j)
+        -:   55:          endif
+        -:   56:14      continue
+       50:   57:        IA(I) = i
+        -:   58:13    continue
+        -:   59:
+        -:   60:* MOD MOD ?!?!
+       51:   61:      do 15 i = 1, N 
+      238:   62:        do 16 j = 0, i, 8  
+      188:   63:             IA(I) = mod(mod(i+j,N),N)+1 
+        -:   64:16      continue
+        -:   65:15    continue
+        -:   66:
+        -:   67:* Loop 20 
+        -:   68:
+       51:   69:      do 20 i = 1, N
+       50:   70:         call idcheck(N,check,AV,BV,ID)
+       50:   71:         CV(IA(I)) = (AV(IA(I)) + BV(IA(I))) / check
+        -:   72:20    continue
+        -:   73:
+        -:   74:
+        -:   75:* Loop 30 
+        -:   76:
+       50:   77:      do 30 i = 2, N
+       49:   78:         call idcheck(N,check,AV,BV,ID)
+       49:   79:         AV(i) = AV(i-1) * BV(i) + CV(i)
+        -:   80:30    continue
+        -:   81:
+        -:   82:
+        -:   83:* Loop 40 
+        -:   84:* lots of repeated code...
+        -:   85:
+       51:   86:      do 40 i = 1, N
+       50:   87:         call idcheck(N,check,AV,BV,ID)
+     2550:   88:         do 45 j = 1, N
+     2500:   89:            if ( check .gt. 0.5 ) then
+      100:   90:               BOT = OP(i,j) 
+      100:   91:               TOP = AV(j) * BV(j)
+      100:   92:               HOLDA = AV(j)
+      100:   93:               AV(j) = BV(j) + CV(j) / (TOP-BOT) * ID(i,i)
+      100:   94:               BV(j) = HOLDA + CV(j) / (TOP-BOT) * ID(j,j)
+      100:   95:               AM(i,j) = AV(j) * trig(IA(i),IA(j)) 
+      100:   96:               BM(i,j) = BV(j) * trig(IA(j),IA(i)) 
+        -:   97:            else
+     2400:   98:               BOT = OP(i,j) 
+     2400:   99:               TOP = AV(j) * BV(j)
+     2400:  100:               HOLDA = AV(j)
+     2400:  101:               AV(j) = BV(j) - CV(j) / (TOP-BOT) * ID(j,j)
+     2400:  102:               BV(j) = HOLDA - CV(j) / (TOP-BOT) * ID(i,i)
+     2400:  103:               AM(i,j) = AV(j) / trig(IA(i),IA(j))
+     2400:  104:               BM(i,j) = BV(j) / trig(IA(j),IA(i)) 
+        -:  105:            endif
+        -:  106:45       continue
+        -:  107:40    continue
+        -:  108:
+        -:  109:
+        -:  110:* Loop 50
+        -:  111:
+       51:  112:      do 50 i = 1, N
+     2550:  113:         do 52  j = 1, N
+     2500:  114:            CM(i,j) = 0.0
+   127500:  115:            do 55 k = 1, N
+   125000:  116:               if ( i .lt. j ) then
+    61250:  117:                  CM(i,j) = CM(i,j) - AM(i,k) * BM(k,j) / check 
+        -:  118:               else
+    63750:  119:                  CM(i,j) = CM(i,j) + AM(i,k) * BM(k,j) / check 
+        -:  120:               endif
+        -:  121:55          continue
+        -:  122:52       continue
+        -:  123:50    continue
+        -:  124:
+        -:  125:
+        -:  126:* Loop 60
+        -:  127:
+       51:  128:      do 60 i = 1, N
+     2550:  129:         do 61 j = 1, N
+     2500:  130:            sum = 0.0
+   127500:  131:            do 62 k = 1, N
+   125000:  132:               sum = sum + CM(i,k) * AM (j,k)
+        -:  133:62          continue
+     2500:  134:            DM(i,j) = sum
+        -:  135:61       continue
+        -:  136:60    continue
+        -:  137:
+       51:  138:      do 63 i = 1, N
+     2550:  139:        do 64 j = 1, N
+     2500:  140:           CM(i,j) = DM(i,j)
+        -:  141:64      continue
+        -:  142:63    continue
+        -:  143:
+        -:  144:* Loop 70
+        -:  145:
+       51:  146:      do 70 i = 1, N
+     2550:  147:         do 71 j = 1, N
+     2500:  148:            sum = 0.0
+   127500:  149:            do 72 k = 1, N
+   125000:  150:               sum = sum - CM(i,k) * BM (j,k)
+        -:  151:72          continue
+     2500:  152:            DM(i,j) = sum
+        -:  153:71       continue
+        -:  154:70    continue
+        -:  155:
+        -:  156:
+        1:  157:      HOLDA = abs(AM(1,1))
+        1:  158:      HOLDB = abs(BM(1,1)) 
+       51:  159:      do 73 i = 1, N
+     2550:  160:        do 74 j = 1, N
+     2500:  161:          HOLDA = max(HOLDA,abs(AM(i,j))) 
+     2500:  162:          HOLDB = max(HOLDB,abs(BM(i,j))) 
+        -:  163:74      continue
+        -:  164:73    continue
+        -:  165:         
+        1:  166:      TRACE3 = 0.0
+        -:  167:       
+        -:  168:* Loop 80
+        -:  169:
+       51:  170:      do 80 i = 1, N
+        -:  171:        TRACE3 = TRACE3 + (AM(IA(i),IA(i)) + BM(IA(i),IA(i)) 
+       50:  172:     +                  - DM(IA(i),IA(i))) / (HOLDA * HOLDB)
+        -:  173:80    continue
+        -:  174:
+        1:  175:      call cpu_time(finish) 
+        -:  176:
+        1:  177:      print *, 'Final trace = ', trace3, ' and IDCHECK ', check
+        1:  178:      print *, '-- RUNTIME -> ', finish-start, ' seconds'
+        1:  179:      end
+        -:  180:        
+        -:  181:         
+    10000:  182:      double precision function trig (i,j)
+        -:  183:      double precision x, y, z
+     5000:  184:      pi = acos(-1.0)
+     5000:  185:      x = dble(i) - dble(j)
+     5000:  186:      y = dble(i) + dble(j) 
+     5000:  187:      z = exp ( sin(sqrt(x**2+y**2)*pi  ) )  
+     5000:  188:      trig = x + y + log10(abs(1+z+(x*y*z)))/ (abs(x)+abs(y))
+        -:  189:      return
+        -:  190:      end 
+        -:  191:
+        -:  192:* subroutine idcheck does what??
+     2699:  193:      subroutine idcheck(N,check,AV,BV,ID)
+        -:  194:
+        -:  195:      double precision AV(*), BV(*), ID(N,*)
+        -:  196:      double precision l2
+        -:  197:      double precision check, check2
+        -:  198:      double precision a, b, c, d 
+        -:  199:
+   137649:  200:      do 10 i = 1, N  
+  6882450:  201:        do 20 j = 1, N
+ 13360050:  202:          if ( i .eq. j ) then 
+   192305:  203:             if (( AV(i) .lt. 0 ) .and. ( BV(j) .lt. 0 )) then
+      799:  204:               ID(i,j) = 1.0
+        -:  205:             elseif (( AV(i) .lt. 0 ) .and. ( BV(j) .gt. 0 )) then
+      589:  206:               ID(i,j) = -1.0
+        -:  207:             elseif (( AV(i) .gt. 0 ) .and. ( BV(j) .lt. 0 )) then
+    55967:  208:               ID(i,j) = -1.0
+        -:  209:             else
+    77595:  210:               ID(i,j) = 1.0
+        -:  211:             endif
+        -:  212:          elseif ( i .ne. j ) then 
+        -:  213:             ID(i,j) =  cos(check+2.0*i*acos(-1.0)/N)+
+  6612550:  214:     C                  2.0*sin(check+ 2.0*j*acos(-1.0)/N)
+        -:  215:          endif
+        -:  216:20      continue
+        -:  217:10    continue
+        -:  218:
+     2699:  219:      l2 = 0.0
+   137649:  220:      do 30 i = 1, N
+   134950:  221:        l2 = l2 + AV(i)**2
+        -:  222:30    continue
+     2699:  223:      l2 = sqrt(l2)
+   137649:  224:      do 40 i = 1, N
+   134950:  225:        AV(i) = AV(i) / l2
+        -:  226:40    continue
+        -:  227:
+     2699:  228:      l2 = 0.0
+   137649:  229:      do 50 i = 1, N
+   134950:  230:        l2 = l2 + BV(i)**2
+        -:  231:50    continue
+     2699:  232:      l2 = sqrt(l2)
+   137649:  233:      do 60 i = 1, N
+   134950:  234:        BV(i) = BV(i) / l2
+        -:  235:60    continue
+        -:  236:     
+        -:  237:
+        -:  238:* "computed goto" wtf rewrite
+        -:  239:
+     2699:  240:      a = 0.0D0
+     2699:  241:      b = 0.0D0
+     2699:  242:      c = 0.0D0
+     2699:  243:      d = 0.0D0
+   137649:  244:      do 70 i = 1, N
+  6882450:  245:        do 80 j = 1, N
+344122500:  246:           do 90 k = 1, N
+337375000:  247:               goto ( 200, 300, 400, 500 ) int(mod(i+j+k,4)+1) 
+ 84346449:  248:200            a  = a +  AV(i) * BV(j) * ID(j,k) 
+ 84346449:  249:               check = check + a
+ 84346449:  250:               goto 100
+ 84346449:  251:300            b  = b +  AV(j) * BV(i) * ID(k,j) 
+ 84346449:  252:               check = check - b 
+ 84346449:  253:               goto 100
+ 84341051:  254:400            c  = c -  AV(i) * BV(j) * ID(k,j) 
+ 84341051:  255:               check = sqrt(b**2 + c**2)
+ 84341051:  256:               goto 100
+ 84341051:  257:500            d  = d -  AV(j) * BV(i) * ID(j,k) 
+ 84341051:  258:               check2 = a + b + c + d
+        -:  259:100             continue
+        -:  260:90         continue
+        -:  261:80      continue
+        -:  262:70    continue
+        -:  263:
+     2699:  264:      check = min(abs(check2),abs(check))/max(abs(check2),abs(check))           
+        -:  265:
+        -:  266:      return
+     2699:  267:      end
+        -:  268:

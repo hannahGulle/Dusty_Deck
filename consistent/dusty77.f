@@ -3,6 +3,7 @@
 *  The ancient dusty deck code
 *  Modified to use timing libs in 2016
 
+* CPPFLAGS in makefile! That's cool!
       parameter (MAXDIM = CPPFLAGS)
 
       integer IA(MAXDIM), N

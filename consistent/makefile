@@ -17,9 +17,12 @@ F77 = gfortran
 F90 = gfortran
 CC  = gcc 
 TIMINGLIB_FLAGS = -O3
-OPT_FLAGS = -O0 
+OPT_FLAGS = -O0
+# when id check given: DEF_FLAGS =
+# when no id check given:
 DEF_FLAGS = -DDO_TIMING 
 
+# "-L." tells it to look in the local directory for the timing library
 TIMINGLIBS =  -L./ -llbstime 
 CLIBS = -lm
 

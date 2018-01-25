@@ -2,16 +2,16 @@
 make -s 
 dusty77;dusty77;dusty77
 make -s clean
-make -s size=75
+make -s size=25
 dusty77;dusty77;dusty77
 make -s clean
-make -s size=100
+make -s size=30
 dusty77;dusty77;dusty77
 make -s clean
-make -s size=125
+make -s size=40
 dusty77;dusty77;dusty77
 make -s clean
-make -s size=150
+make -s size=50
 dusty77;dusty77;dusty77
 make -s clean
 

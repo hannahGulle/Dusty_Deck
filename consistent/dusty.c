@@ -40,7 +40,7 @@ int main(){
     float sum;
 
     int i, j, k;   /* loop indices */
-
+    // calloc is required to be contiguous, but malloc can be but is not always
     IA = calloc( MAXDIM, sizeof(int));
     AV = calloc( MAXDIM, sizeof(double));
     BV = calloc( MAXDIM, sizeof(double));
@@ -335,6 +335,8 @@ void idcheck( int N, double *check, double *AV, double *BV, double *ID) {
 
 }
 
+// Pound's random number generator made to be consistent
+// between Fortran and C
 double conrand(double *seed) {
 
     double a, m;

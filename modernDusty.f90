@@ -287,25 +287,26 @@ enddo
       b = 0.0D0
       c = 0.0D0
       d = 0.0D0
-      do 70 i = 1, N
-        do 80 j = 1, N
-           do 90 k = 1, N
-               goto ( 200, 300, 400, 500 ) int(mod(i+j+k,4)+1) 
-200            a  = a +  AV(i) * BV(j) * ID(j,k) 
-               check = check + a
-               goto 100
-300            b  = b +  AV(j) * BV(i) * ID(k,j) 
-               check = check - b 
-               goto 100
-400            c  = c -  AV(i) * BV(j) * ID(k,j) 
-               check = sqrt(b**2 + c**2)
-               goto 100
-500            d  = d -  AV(j) * BV(i) * ID(j,k) 
-               check2 = a + b + c + d
-100            continue
-90         continue
-80      continue
-70    continue
+      do i = 1, N
+        do j = 1, N
+           do k = 1, N
+               select case(int(mod(i+j+k,4)+1)) 
+               case(1)
+                  a  = a +  AV(i) * BV(j) * ID(j,k) 
+                  check = check + a
+               case(2)
+                  b  = b +  AV(j) * BV(i) * ID(k,j) 
+                  check = check - b 
+               case(3)
+                  c  = c -  AV(i) * BV(j) * ID(k,j) 
+                  check = sqrt(b**2 + c**2)
+               case(4)
+                  d  = d -  AV(j) * BV(i) * ID(j,k) 
+                  check2 = a + b + c + d
+               end select
+           enddo
+        enddo
+     enddo
 
 
       check = min(abs(check2),abs(check))/max(abs(check2),abs(check))           

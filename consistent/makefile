@@ -16,8 +16,8 @@
 F77 = gfortran    
 F90 = gfortran
 CC  = gcc 
-TIMINGLIB_FLAGS = -O3
-OPT_FLAGS = -O0
+TIMINGLIB_FLAGS = -O1
+OPT_FLAGS = -O1
 # when id check given: DEF_FLAGS =
 # when no id check given:
 DEF_FLAGS = -DDO_TIMING 

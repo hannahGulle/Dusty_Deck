@@ -6,3 +6,17 @@ gprof a.out gmon.out >gprof_results
 gfortran -fprofile-arcs -ftest-coverage dusty.f
 ./a.out
 gcov dusty.f
+
+#ifdef NO_OPT
+
+#else
+
+	#ifdef OPT_1
+
+	#else
+
+	#endif
+
+#endif
+
+compile: -DOPT_1

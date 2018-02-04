@@ -2,10 +2,11 @@
 
 * Assigns 50 to constant MAXDIM -- Can't be changed
       parameter (MAXDIM = 50)
+      parameter (pi = acos(-1.0))
 
 * Creates an integer array of maxdimension size AND
 * a changeable copy of MAXDIM known as N
-      integer IA(MAXDIM), N
+      integer IA(MAXDIM), N, i, j, k
 
 * Creates double rank 1 arrays of MAXDIM
       double precision AV(MAXDIM), BV(MAXDIM), CV(MAXDIM)
@@ -19,8 +20,7 @@
       real start, finish
 
 * Function which acts as an external subprogram
-      double precision trig
-      external trig
+      double precision xij, xji, yij, yji, zij, zji, trigij, trigji
 
 * Sets changeable value N to the constant MAXDIM
       N = MAXDIM
@@ -66,23 +66,21 @@
 * Building a matrix??
 
         do i = 1, N
-                do j = 1, N
-                        call idcheck(N, check, AV,BV,ID)
-                        if ( check .gt. 0.5 ) then
-                                OP(i,j) = ( AV(i) * BV(j) ) / BV(i)
-                        else
-                                OP(i,j) = ( AV(j) * BV(i) ) / BV(j)
-                        endif
-                enddo
+          do j = 1, N
+                call idcheck(N, check, AV,BV,ID)
+                if ( check .lt. 0.5 ) then
+                        OP(i,j) = ( AV(j) * BV(i) ) / BV(j)
+                else
+                        OP(i,j) = ( AV(i) * BV(j) ) / BV(i)
+                endif
                 IA(i) = i
+           enddo
         enddo
 
-** !!!! MOD CHANGE IN !!!! **
-        do i = 0, N
-                do j = 1, N
-                        IA(i) = j
-*                        IA(i) = mod(mod(i+j,N),N)+1
-                        print *, i, IA(i)
+* Mod Mod??
+        do i = 1, N
+                do j = 0, i, 8
+                        IA(i) = mod(mod(i+j,N),N)+1
                 enddo
         enddo
 
@@ -106,25 +104,57 @@
 * Pull out AV and BV assignments from the if
         do i = 1, N
             call idcheck(N,check,AV,BV,ID)
-            do j = 1, N
-                if ( check .gt. 0.5 ) then
-                   BOT = OP(i,j) 
-                   TOP = AV(j) * BV(j)
-                   HOLDA = AV(j)
-                   AV(j) = BV(j) + CV(j) / (TOP-BOT) * ID(i,i)
-                   BV(j) = HOLDA + CV(j) / (TOP-BOT) * ID(j,j)
-                   AM(i,j) = AV(j) * trig(IA(i),IA(j)) 
-                   BM(i,j) = BV(j) * trig(IA(j),IA(i)) 
+            if ( .not.(check .gt. 0.5) ) then
+                    do j = 1, N    
+                        BOT = OP(i,j)
+                        TOP = AV(j) * BV(j)
+                        HOLDA = AV(j)
+
+                        xij = dble( IA(i) ) - dble( IA(j) )
+                        xji = dble( IA(j) ) - dble( IA(i) )
+
+                        yij = dble( IA(i) ) + dble( IA(j) )
+                        yji = dble( IA(j) ) + dble( IA(i) )
+
+                        zij = exp( sin( sqrt( xij**2 + yij**2 ) * pi ))
+                        zji = exp( sin( sqrt( xji**2 + yji**2 ) * pi ))
+
+                        trigij = xij+yij+log10(abs(1+zij+(xij*yij*zij)))
+     +                          / (abs(xij)+abs(yij))
+                        trigji = xji+yji+log10(abs(1+zji+(xji*yji*zji)))
+     +                          / (abs(xji)+abs(yji))
+                   
+                        AV(j) = BV(j) - CV(j) / (TOP-BOT) * ID(j,j)
+                        BV(j) = HOLDA - CV(j) / (TOP-BOT) * ID(i,i)
+                        AM(i,j) = AV(j) / trigij
+                        BM(i,j) = BV(j) / trigji
+                     enddo
                 else
-                   BOT = OP(i,j) 
-                   TOP = AV(j) * BV(j)
-                   HOLDA = AV(j)
-                   AV(j) = BV(j) - CV(j) / (TOP-BOT) * ID(j,j)
-                   BV(j) = HOLDA - CV(j) / (TOP-BOT) * ID(i,i)
-                   AM(i,j) = AV(j) / trig(IA(i),IA(j))
-                   BM(i,j) = BV(j) / trig(IA(j),IA(i)) 
-               endif
-           enddo
+                    do j = 1, N    
+                        BOT = OP(i,j)
+                        TOP = AV(j) * BV(j)
+                        HOLDA = AV(j)
+
+                        xij = dble( IA(i) ) - dble( IA(j) )
+                        xji = dble( IA(j) ) - dble( IA(i) )
+
+                        yij = dble( IA(i) ) + dble( IA(j) )
+                        yji = dble( IA(j) ) + dble( IA(i) )
+
+                        zij = exp( sin( sqrt( xij**2 + yij**2 ) * pi ))
+                        zji = exp( sin( sqrt( xji**2 + yji**2 ) * pi ))
+
+                        trigij = xij+yij+log10(abs(1+zij+(xij*yij*zij)))
+     +                          / (abs(xij)+abs(yij))
+                        trigji = xji+yji+log10(abs(1+zji+(xji*yji*zji)))
+     +                          / (abs(xji)+abs(yji))
+                   
+                        AV(j) = BV(j) + CV(j) / (TOP-BOT) * ID(i,i)
+                        BV(j) = HOLDA + CV(j) / (TOP-BOT) * ID(j,j)
+                        AM(i,j) = AV(j) * trigij
+                        BM(i,j) = BV(j) * trigji
+                enddo
+           endif
         enddo
 
 * Consider making a 1 layer loop through N^3
@@ -132,13 +162,16 @@
         do i = 1, N
             do j = 1, N
                  CM(i,j) = 0.0
-                 do k = 1, N
-                      if ( i .lt. j ) then
-                         CM(i,j) = CM(i,j) - AM(i,k) * BM(k,j) / check 
-                      else
+
+                 if ( .not.( i .lt. j )) then
+                    do k = 1, N
                          CM(i,j) = CM(i,j) + AM(i,k) * BM(k,j) / check 
-                      endif
-                 enddo
+                    enddo
+                 else
+                    do k = 1, N
+                         CM(i,j) = CM(i,j) - AM(i,k) * BM(k,j) / check
+                    enddo
+                 endif
            enddo
        enddo
 
@@ -201,15 +234,7 @@ Consider making a 1/2 layer loop
         
 ***************************************************************
 * External subprogram TRIG 
-      double precision function trig (i,j)
-      double precision x, y, z
-      pi = acos(-1.0)
-      x = dble(i) - dble(j)
-      y = dble(i) + dble(j) 
-      z = exp ( sin(sqrt(x**2+y**2)*pi  ) )  
-      trig = x + y + log10(abs(1+z+(x*y*z)))/ (abs(x)+abs(y))
-      return
-      end 
+* Deleted and integrated without a function call in the program
 
 ***************************************************************
 * subroutine idcheck does what??
@@ -223,19 +248,20 @@ Consider making a 1/2 layer loop
 * Condense to 1 layer loop
       do i = 1, N
          do j = 1, N
-          if ( i .eq. j ) then 
-             if (( AV(i) .lt. 0 ) .and. ( BV(j) .lt. 0 )) then
+          if ( i .ne. j ) then
+             ID(i,j) =  cos(check+2.0*i*acos(-1.0)/N)+
+     C                  2.0*sin(check+ 2.0*j*acos(-1.0)/N)
+          elseif ( i .eq. j ) then 
+             if ( (( AV(i) .eq. 0) .and. (BV(j) .eq. 0)) .or.
+     C            (( AV(i) .gt. 0) .and. (BV(j) .gt. 0)) ) then
+                ID(i,j) = 1.0
+             elseif (( AV(i) .gt. 0 ) .and. ( BV(j) .lt. 0 )) then
+               ID(i,j) = -1.0
+             elseif (( AV(i) .lt. 0 ) .and. ( BV(j) .lt. 0 )) then
                ID(i,j) = 1.0
              elseif (( AV(i) .lt. 0 ) .and. ( BV(j) .gt. 0 )) then
                ID(i,j) = -1.0
-             elseif (( AV(i) .gt. 0 ) .and. ( BV(j) .lt. 0 )) then
-               ID(i,j) = -1.0
-             else
-               ID(i,j) = 1.0
              endif
-          elseif ( i .ne. j ) then 
-             ID(i,j) =  cos(check+2.0*i*acos(-1.0)/N)+
-     C                  2.0*sin(check+ 2.0*j*acos(-1.0)/N)
           endif
          enddo
       enddo
@@ -278,8 +304,8 @@ Consider making a 1/2 layer loop
       c = 0.0D0
       d = 0.0D0
       do i = 1, N
-         do j = 1, N
-            do k = 1, N
+        do j = 1, N 
+           do k = 1, N
                select case( int(mod(i+j+k,4)+1) )
                case( 1 )
                   a  = a +  AV(i) * BV(j) * ID(j,k) 
@@ -295,7 +321,7 @@ Consider making a 1/2 layer loop
                   check2 = a + b + c + d
                end select 
             enddo
-         enddo
+        enddo
       enddo
       check = min(abs(check2),abs(check))/max(abs(check2),abs(check))
 

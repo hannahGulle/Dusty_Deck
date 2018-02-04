@@ -1,6 +1,6 @@
       program dusty 
 
-      parameter (MAXDIM = 100)
+      parameter (MAXDIM = 50)
 
       integer IA(MAXDIM), N
       double precision AV(MAXDIM), BV(MAXDIM), CV(MAXDIM)

@@ -1,29 +1,24 @@
 #!/bin/bash
 make -s
-dusty;dusty
-make -s clean
-make -s size=20
-dusty;dusty;dusty
+make run
 make -s clean
 make -s size=30
-dusty;dusty;dusty
+make run
 make -s clean
 make -s size=40
-dusty;dusty;dusty
+make run
 make -s clean
 make -s size=50
-dusty;dusty;dusty
+make run
 make -s clean
 make -s size=60
-dusty;dusty;dusty
+make run
 make -s clean
 make -s size=70
-dusty;dusty;dusty
+make run
 make -s clean
 make -s size=80
-dusty;dusty;dusty
+make run
 make -s clean
 make -s size=90
-dusty;dusty;dusty
-make -s clean
-make -s size=100
+make run

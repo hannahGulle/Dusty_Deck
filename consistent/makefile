@@ -16,8 +16,8 @@
 F77 = gfortran    
 F90 = gfortran
 CC  = gcc 
-TIMINGLIB_FLAGS = -O3 -fselective-scheduling
-OPT_FLAGS = -O3 -fselective-scheduling
+TIMINGLIB_FLAGS = -O0 #-O3 -fselective-scheduling
+OPT_FLAGS = -O0 #-O3 -fselective-scheduling
 # when id check given: DEF_FLAGS =
 # when no id check given:
 DEF_FLAGS = -DDO_TIMING 
@@ -80,3 +80,52 @@ ctags :
 lib: $(OBJS) 
 	ar -rc liblbstime.a $(OBJS) 
 	ranlib liblbstime.a
+
+run:
+	./dusty90 | tee f90timingtest.dat
+	./dusty90 | tee -a f90timingtest.dat
+	./dusty90 | tee -a f90timingtest.dat
+	./dusty90 | tee -a f90timingtest.dat
+	./dusty90 | tee -a f90timingtest.dat
+	./dusty90 | tee -a f90timingtest.dat
+	./dusty90 | tee -a f90timingtest.dat
+	./dusty90 | tee -a f90timingtest.dat
+	./dusty90 | tee -a f90timingtest.dat
+	./dusty90 | tee -a f90timingtest.dat
+	./dusty90 | tee -a f90timingtest.dat
+	./dusty77 | tee f77timingtest.dat
+	./dusty77 | tee -a f77timingtest.dat
+	./dusty77 | tee -a f77timingtest.dat
+	./dusty77 | tee -a f77timingtest.dat
+	./dusty77 | tee -a f77timingtest.dat
+	./dusty77 | tee -a f77timingtest.dat
+	./dusty77 | tee -a f77timingtest.dat
+	./dusty77 | tee -a f77timingtest.dat
+	./dusty77 | tee -a f77timingtest.dat
+	./dusty77 | tee -a f77timingtest.dat
+	./dusty77 | tee -a f77timingtest.dat
+	./dusty | tee ctimingtest.dat
+	./dusty | tee -a ctimingtest.dat
+	./dusty | tee -a ctimingtest.dat
+	./dusty | tee -a ctimingtest.dat
+	./dusty | tee -a ctimingtest.dat
+	./dusty | tee -a ctimingtest.dat
+	./dusty | tee -a ctimingtest.dat
+	./dusty | tee -a ctimingtest.dat
+	./dusty | tee -a ctimingtest.dat
+	./dusty | tee -a ctimingtest.dat
+	./dusty | tee -a ctimingtest.dat
+
+average:
+	echo "mydata = read.table(\"f90timingtest.dat\", header=FALSE)" >mean.R 
+	echo "mean(mydata[[\"V2\"]])" >>mean.R
+	R -q --vanilla -f mean.R
+	rm mean.R
+	echo "mydata = read.table(\"f77timingtest.dat\", header=FALSE)" >mean.R 
+	echo "mean(mydata[[\"V2\"]])" >>mean.R
+	R -q --vanilla -f mean.R
+	rm mean.R
+	echo "mydata = read.table(\"ctimingtest.dat\", header=FALSE)" >mean.R 
+	echo "mean(mydata[[\"V2\"]])" >>mean.R
+	R -q --vanilla -f mean.R
+	rm mean.R
